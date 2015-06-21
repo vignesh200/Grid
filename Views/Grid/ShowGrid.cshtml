@@ -1,0 +1,97 @@
+﻿@{
+    ViewBag.Title = "ShowGrid";
+}
+@section Scripts {
+    <script type="text/javascript">
+        $(function () {
+            jsonObj = [];
+            var item = {};
+            names = [];
+            gridEditStateAdd = 0;
+            gridEditStateCancelSave = 1;
+            gridEditStateEditDelete = 2;
+            function ActionAdd(loopdata, index, state) {
+                var actionstr = "";
+                if (state == gridEditStateEditDelete) {
+                    actionstr = "<td><span data-actionspan=" + index + "><a href=\"#\" data-actiontype=\"edit\">Edit</a>&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"#\" data-actiontype=\"delete\">Delete</a></td>";
+                }
+                else if(state==gridEditStateAdd) {
+                    actionstr = "<td><span data-actionspan=" + index + "><a href=\"#\" data-actiontype=\"add\">Add</a></td>";
+                }
+                loopdata = loopdata + actionstr;
+                return loopdata;
+            }
+            function rowData(value, setvalue, rownum) {
+                var rowstr = "<td><span data-labelspan=" + setvalue + " data-rownumber=" + rownum + ">" + value + "</span><span data-textboxspan=" + setvalue + " data-rownumberinputbox=" + rownum + "></span></td>";
+                return rowstr;
+
+
+
+                function BlankRow(str) {
+                    str = str + "<tr>"
+                    for (var i = 0; i < numberoffields; i++) {
+                        str = str + "<td></td>";
+                    }
+                    str = ActionAdd(str, "xyz", 0) + "</tr>";
+                    return str;
+                }
+                $.ajax({
+                    url: "/grid/griddata", success: function (data) {
+                        str = "<table class=\"table\"><tr>";
+                        numberoffields = data.information.length;
+                        $.each(data.information, function (index, value) {
+                            str = str + "<th>" + value + "</th>";
+                            names.push(value);
+                        });
+                        str = str + "<th>" + "Actions" + "</th>";
+                        str = str + "</tr>"
+                        item = {};
+                        var loopdata = "";
+                        if (data.data == undefined) {
+                            alert();
+                            str = BlankRow(str);
+                            $("#myGrid").html(str);
+                        }
+
+                        else {
+                            $.each(data.data, function (index, value) {
+                                var c = index + 1;
+                                var len = value.length;
+
+                                loopdata = loopdata + "<tr>";
+
+                                $.each(value, function (index, value1) {
+                                    c1 = index + 1;
+
+                                    item[names[index]] = value1;
+                                    loopdata = loopdata + rowData(value1, c1, c);
+                                    if (index + 1 == len) {
+                                        loopdata = ActionAdd(loopdata, c, 2);
+                                    }
+                                });
+                                jsonObj.push(item);
+                                item = {};
+                                loopdata = loopdata + "</tr>";
+                            });
+                        }
+                        str = str + loopdata;
+
+                        str = BlankRow(str) + "</table>"
+                        jsonString = JSON.stringify(jsonObj);
+                        alert(jsonString);
+                        $("#myGrid").html(str);
+                    }
+                });
+            }
+        });
+
+
+    </script>
+
+}
+
+
+
+<h2>ShowGrid</h2>
+
+<div id="myGrid"></div>

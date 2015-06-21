@@ -1,0 +1,166 @@
+﻿@{
+    ViewBag.Title = "ShowGrid2";
+}
+
+<h2>ShowGrid2</h2>
+@section Scripts {
+    <script type="text/javascript">
+        var tablename = "";
+        $(function () {
+            ///Events functions
+            ////
+            /////
+            $( document ).on('click','.btn-link',function () {
+                var element = $(this);
+                var action = $(element).html().trim();
+               
+                if (action == "Add") {
+                 //   changeToTextBoxes(element, "new");
+                    $(element).after("<span><a class=\"btn-link\" data-savetype=\"new\">Save</a>&nbsp;&nbsp;&nbsp;<a class=\"btn-link\" data-canceltype=\"new\">Cancel</a></span>");
+                    $(element).remove();
+                }
+                else if (action == "Edit") {
+                    //   changeToTextBoxes(element, "new");
+                    $(element).after("<span><a class=\"btn-link\" data-savetype=\"old\">Save</a>&nbsp;&nbsp;&nbsp;<a class=\"btn-link\" data-canceltype=\"old\">Cancel</a></span>");
+                    $(element).remove();
+                }
+                else if (action == "Cancel") {
+                    var type = $(element).data("canceltype").trim();
+
+                    if (type == "new") {
+                        
+                      var parentelement=$(element).parent();
+                           $(parentelement).before("<a class=\"btn-link\" data-addtype=\"savenew\">Add</a>").remove();
+                        
+                    }
+                    else if (type == "old") {
+                        var parentelement = $(element).parent();
+                        $(parentelement).before("<a class=\"btn-link\" data-addtype=\"saveold\">Edit</a>").remove();
+
+                    }
+                }
+
+            });
+
+            $("[data-tableurl]").each(function (index, element) {
+                var dataurl = $(element).data("tableurl");
+                var pagesize = $(element).data("pagesize");
+                var propname = $(element).data("propname");
+                tablename = "table" + index;
+                var theElement = element;
+
+                $.ajax({
+                    url: dataurl, success: function (data) {
+                        var HeadingData = data.information;
+                        var tableData = data.data;
+                        var tableClass = data.class;
+                        var tableString = "";
+                        tableString = tableString + getTableStart();
+                        tableString = tableString + getHeadingSring(HeadingData);
+                        tableString = tableString + getTableDataString(tableData, pagesize);
+                        tableString = tableString + getTableEnd();
+                        $(theElement).html(tableString);
+                    }
+
+                });
+
+
+
+
+
+            });
+           
+
+            function getTableDataString(data,pagesize) {
+                var tabledatastr = "";
+                var pageno=1;
+                var storeindex = 0;;
+                var colnumber = 0;
+                var sampledata;
+                $.each(data, function (index, data1) {
+                   
+                    storeindex = index;
+                    sampledata = data1;
+                    tabledatastr = tabledatastr + getRowString(index, pageno);
+                    $.each(data1, function (index, rowdata) {
+                        
+                        tabledatastr = tabledatastr + getData(storeindex, index, rowdata);
+
+                    });
+                    tabledatastr = tabledatastr+getAction(storeindex,index+1,1) + getCloseRowString();
+                    pageno = parseInt(index / pagesize) + 1;
+                });
+                pageno = parseInt((storeindex + 1) / pagesize) + 1;
+                colnumber = sampledata.length;
+                tabledatastr = tabledatastr + getEmptyRow(storeindex + 1, colnumber, pageno);
+                return tabledatastr;
+
+            }
+
+            function getTableStart() {
+                return "<table class=\"table\">";
+            }
+            function getTableEnd() {
+                return "</table>";
+            }
+            function getHeadingSring(data) {
+                var lengthvalue = data.length;
+                var str = "<tr>";
+                $.each(data, function (index, value) {
+                    if (index + 1 == lengthvalue) {
+                        str = str + "<th>" + value + "</th><th>Actions</th>";
+                    }
+                    else {
+                        str = str + "<th>" + value + "</th>";
+                    }
+                });
+                return str + "</tr>";
+            }
+            function getRowString(rowIndex, pageId) {
+                return "<tr data-rowId=" + tablename + "-" + rowIndex + " data-pageId=\"" + tablename + "-" + pageId + "\" >";
+            }
+            function getCloseRowString() {
+                return "</tr>";
+            }
+            function getData(rowIndex, columnIndex, value) {
+                if (value == "" || value == undefined) {
+
+                    return "<td data-position=\"" + tablename + "-" + rowIndex + "-" + columnIndex + "\"></td>";
+                }
+                else {
+                    return "<td data-position=\"" + tablename + "-" + rowIndex + "-" + columnIndex + "\">" + value + "</td>";
+                }
+            }
+            function getAction(rowIndex, columnIndex, value) {
+                var str = "<td data-position=\"action" + tablename + "-" + rowIndex + "-" + columnIndex + "\">";
+                var anchortags = "";
+                if (value == 0) {
+                    anchortags = "<a class=\"btn-link\" data-addtype=\"savenew\">Add</a>";
+                }
+                else if (value == 1) {
+                    anchortags = "<a class=\"btn-link\" data-addtype=\"saveold\">Edit</a>&nbsp;&nbsp;&nbsp;<a class=\"btn-link\">Delete</a>";
+                }
+                return str + anchortags + "</td>";
+            }
+            function getEmptyRow(rowIndex, maxColIndex, pageId) {
+                // index = 0;
+              //  alert(rowIndex + " " + maxColIndex);
+                var str = getRowString(rowIndex, pageId);
+                for (var index = 0; index < maxColIndex; index++) {
+                    
+                    str = str + getData(rowIndex, index, "");
+                }
+                str = str + getAction(rowIndex, maxColIndex, "") + getCloseRowString();
+                return str;
+            }
+        });
+
+
+
+    </script>
+}
+
+<div data-tableurl="/grid/griddata" data-pagesize="10" data-propname="accesstable"></div>
+
+<div data-tableurl="/grid/griddata" data-pagesize="10" data-propname="accesstable2"></div>
+
